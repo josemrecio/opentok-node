@@ -9,7 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^3.5.0",
-    "cors": "^2.8.5"
+    "opentok": "^2.9.2"
   }
 }

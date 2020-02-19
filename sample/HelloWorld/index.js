@@ -1,14 +1,17 @@
 /* eslint-disable no-console, no-path-concat */
 
 // Dependencies
-var express = require('express');
-var OpenTok = require('../../lib/opentok');
-var app = express();
-var cors = require('cors');
-var bodyParser = require('body-parser');
+const express = require('express');
+const path = require('path');
+const https = require('https');
+const fs = require('fs');
+const OpenTok = require('opentok');
+const app = express();
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
-var whitelist = ['http://localhost:8080']
-var corsOptions = {
+const whitelist = ['https://localhost:8080', 'https://10.26.0.102:8080']
+const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true)
@@ -20,9 +23,8 @@ var corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-var opentok;
-var apiKey = process.env.API_KEY;
-var apiSecret = process.env.API_SECRET;
+const apiKey = process.env.API_KEY;
+const apiSecret = process.env.API_SECRET;
 
 // Verify that the API Key and API Secret are defined
 if (!apiKey || !apiSecret) {
@@ -31,20 +33,23 @@ if (!apiKey || !apiSecret) {
 }
 
 // Starts the express app
-function init() {
-  app.listen(3000, function () {
-    console.log('You\'re app is now ready at http://localhost:3000/');
-  });
-}
-
-init();
+const key = fs.readFileSync(path.join(__dirname, 'selfsigned.key'));
+const cert = fs.readFileSync(path.join(__dirname, 'selfsigned.crt'));
+const options = {
+  key: key,
+  cert: cert
+};
+const httpsServer = https.createServer(options, app);
+httpsServer.listen(3000, function () {
+  console.log('You\'re app is now ready at https://localhost:3000/');
+});
 
 // Initialize OpenTok
-opentok = new OpenTok(apiKey, apiSecret);
+const opentok = new OpenTok(apiKey, apiSecret);
 
 app.post('/session', function (req, res) {
   console.log('Generating sessionId');
-  const params = { };
+  var params = { mediaMode:"routed" };
   const requestLocation = req.body.location;
   if (requestLocation && requestLocation !== 'null') {
     console.log('location:' + requestLocation);
